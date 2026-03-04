@@ -1,0 +1,13 @@
+click
+Sphinx
+coverage
+awscli
+flake8
+python-dotenv>=0.5.1
+jupyterlab
+numpy
+pandas
+torch_geometric
+h5py
+neuraloperator
+horovod

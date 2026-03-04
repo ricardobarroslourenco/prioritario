@@ -1,40 +1,32 @@
-FROM rapidsai/base:26.02-cuda13-py3.13-amd64
-LABEL authors="Ricardo Barros Lourenco"
+FROM huggingface/transformers-pytorch-gpu:latest
+# Nota - Para build a partir de MacOS : FROM --platform=linux/amd64 huggingface/transformers-pytorch-gpu:latest
 
-# --- 1. Dependências do Sistema (apt-get) ---
-USER root
+# Bash como shell padrão
+ENV SHELL=/bin/bash
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    curl \
-    wget \
+ENV DEBIAN_FRONTEND noninteractive
+
+# Dependências SO
+RUN  apt-get update && apt-get install -y --no-install-recommends apt-utils \
+    vim \
     nano \
-    && rm -rf /var/lib/apt/lists/*
+    git \
+    cmake \
+    build-essential
 
-# --- 2. Dependências Conda/Mamba (Recomendado) ---
-# Mudamos para o usuário 'rapids' para usar o ambiente Conda corretamente
-USER rapids
+RUN pip install --upgrade pip
+RUN pip install uv
 
-# Usamos 'mamba' (mais rápido que conda) para instalar pacotes do canal conda-forge ou nvidia
-# Exemplo: instalando scikit-learn e matplotlib via conda
-RUN mamba install -y -n base \
-    scikit-learn \
-    matplotlib \
-    jupyterlab \
-    && mamba clean -ya
+# Dependências python, via requirements
+COPY requirements.txt .
+RUN uv pip install --system -r requirements.txt
 
-# --- 3. Dependências Python (pip) ---
-# Use pip apenas para pacotes que não estão disponíveis no Conda ou se preferir
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir \
-    torch \
-    torchvision \
-    --index-url https://download.pytorch.org/whl/cu130
+# Congela versionamento de ambiente para reprodutibilidade
+RUN pip freeze > $(date +%Y-%m-%d)_requirements_instalado.txt
+RUN apt list --installed > $(date +%Y-%m-%d)_ambiente_apt_instalado.txt
 
-# --- Configuração de Execução ---
-WORKDIR /app
+# Expõe portas do Jupyter (8888) e Dask (8787, 8686)
+EXPOSE 8888 8787 8686
 
-# O ENTRYPOINT da imagem base já carrega o ambiente Conda.
-# CMD define o comando padrão. Para batch, você sobrescreve isso ao rodar o container.
-# Ex: docker run minha-imagem python meu_script.py
-CMD ["/bin/bash"]
+# Inicia o Jupyter Lab como processo principal - caso não rodando jupyter (ex. batch jobs), usar CMD ["/bin/bash"]
+CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--allow-root", "--no-browser"]
