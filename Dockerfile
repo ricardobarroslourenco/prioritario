@@ -48,6 +48,9 @@ COPY requirements.txt .
 # - '--system': Instala no ambiente Python do sistema (não cria venv), o que é comum em Docker.
 RUN uv pip install --system -r requirements.txt
 
+# Instala monitoracao de GPU (pacote NVIDIA)
+RUN uv pip install --extra-index-url https://pypi.anaconda.org/rapidsai-wheels-nightly/simple --pre jupyterlab_nvdashboard
+
 # ==============================================================================
 # 5. RASTREABILIDADE E VERSIONAMENTO
 # ==============================================================================
