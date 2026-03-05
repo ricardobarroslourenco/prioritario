@@ -1,0 +1,91 @@
+#!/bin/bash
+
+# ==============================================================================
+# 1. DIRETIVAS DO SLURM (SBATCH)
+# Estas linhas são lidas pelo agendador SLURM para alocar os recursos corretos.
+# ==============================================================================
+
+# --nodes=1: Solicita a alocação de 1 nó (máquina física) para o trabalho.
+#SBATCH --nodes=1
+
+# --partition=gpu: Especifica que o trabalho deve ser executado na partição de nós que possuem GPUs.
+#SBATCH --partition=gpu
+
+# --ntasks=1: Solicita a execução de 1 tarefa no total.
+#SBATCH --ntasks=1
+
+# --mem=32G: Reserva 32 Gigabytes de memória RAM para o trabalho.
+#SBATCH --mem=32G
+
+# --gres=gpu:1: Solicita 1 recurso genérico (Generic RESource) do tipo 'gpu'.
+#SBATCH --gres=gpu:1
+
+# --oversubscribe: Permite que mais de uma tarefa seja executada por núcleo de CPU, se necessário.
+#SBATCH --oversubscribe
+
+# --ntasks-per-node=1: Limita a 1 tarefa por nó alocado.
+#SBATCH --ntasks-per-node=1
+
+# -J job_gpu: Define o nome do trabalho como "job_gpu" para fácil identificação.
+#SBATCH -J job_gpu
+
+# --mail-user: Endereço de e-mail para receber notificações sobre o status do trabalho.
+#SBATCH --mail-user=your.email@example.com
+
+# --mail-type=ALL: Envia e-mails quando o trabalho começa, termina, ou falha (BEGIN, END, FAIL).
+#SBATCH --mail-type=ALL
+
+
+# ==============================================================================
+# 2. PREPARAÇÃO DO AMBIENTE DE EXECUÇÃO
+# Comandos executados no nó alocado antes de iniciar a tarefa principal.
+# ==============================================================================
+
+# Muda o diretório de trabalho para o mesmo diretório de onde o script foi submetido.
+# Isso garante que caminhos relativos para outros scripts ou dados funcionem corretamente.
+cd $SLURM_SUBMIT_DIR
+
+# Obtém e armazena o nome do host (nó) alocado para o trabalho.
+NODES=$(scontrol show hostname $SLURM_JOB_NODELIST)
+
+# Exibe uma mensagem de início com a data e hora.
+echo -e "\n## Job iniciado em $(date '+%d-%m-%Y %T') ##################\n"
+
+# Exibe o nome do host onde o script está sendo executado.
+echo -e "\nHostname: $(hostname)\n\n"
+
+# Verifica e exibe a versão do Singularity (ou Apptainer) instalada no nó.
+echo "--- Verificando a versão do Singularity/Apptainer ---"
+singularity --version
+echo "---------------------------------------------------"
+
+
+# ==============================================================================
+# 3. CONFIGURAÇÃO DAS VARIÁVEIS DA TAREFA
+# Definição de caminhos e parâmetros para a execução do contêiner.
+# ==============================================================================
+
+IMAGE_PATH="/path/to/your_image.sif" # Caminho para o arquivo da imagem Singularity/Apptainer
+BASE_PATH="/Users/ricardo/PycharmProjects/prioritario/job_scheduling/" # Caminho base do projeto
+PORT_LAB="8888" # Porta de rede a ser usada pelo Jupyter Lab
+PATH_JUPYTER_MOUNT="/Users/ricardo/PycharmProjects/prioritario/" # Diretório do host que será montado como a pasta principal do Jupyter
+
+# Define a variável de ambiente HOME para o caminho de montagem do Jupyter.
+# Isso faz com que o Jupyter e outros programas usem este diretório para configurações e arquivos padrão.
+export HOME=$PATH_JUPYTER_MOUNT
+echo "HOME foi definido como: $HOME"
+
+
+# ==============================================================================
+# 4. EXECUÇÃO DO CONTÊINER SINGULARITY
+# Comando principal que inicia o contêiner e a aplicação.
+# ==============================================================================
+
+# 'singularity run': Executa o script de execução padrão (%runscript) definido dentro da imagem.
+# '-B /share_beta': Monta (bind) o diretório '/share_beta' do host para dentro do contêiner.
+# '--nv': Habilita o suporte a GPUs NVIDIA, permitindo que o contêiner acesse a GPU do host.
+# '$IMAGE_PATH': O contêiner que será executado.
+# '${BASE_PATH}start_jupyter.sh' $PORT_LAB $PATH_JUPYTER_MOUNT': Argumentos passados para o script %runscript.
+#   - O primeiro argumento é o caminho para o script que inicia o Jupyter.
+#   - Os outros são a porta e o caminho de montagem para o Jupyter.
+singularity run -B /share_beta --nv $IMAGE_PATH ${BASE_PATH}start_jupyter.sh $PORT_LAB $PATH_JUPYTER_MOUNT
