@@ -14,7 +14,7 @@ FROM huggingface/transformers-pytorch-gpu:latest
 ENV SHELL=/bin/bash
 
 # Evita que o apt-get faça perguntas interativas durante a instalação (ex: fuso horário).
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 # ==============================================================================
 # 3. DEPENDÊNCIAS DO SISTEMA (APT-GET)
@@ -49,7 +49,7 @@ COPY requirements.txt .
 RUN uv pip install --system -r requirements.txt
 
 # Instala monitoracao de GPU (pacote NVIDIA)
-RUN uv pip install --extra-index-url https://pypi.anaconda.org/rapidsai-wheels-nightly/simple --pre jupyterlab_nvdashboard
+RUN uv pip install --system --extra-index-url https://pypi.anaconda.org/rapidsai-wheels-nightly/simple --pre jupyterlab_nvdashboard
 
 # ==============================================================================
 # 5. RASTREABILIDADE E VERSIONAMENTO
@@ -59,9 +59,6 @@ RUN uv pip install --extra-index-url https://pypi.anaconda.org/rapidsai-wheels-n
 # O comando usa a data atual no nome do arquivo.
 RUN pip freeze > $(date +%Y-%m-%d)_requirements_instalado.txt
 RUN apt list --installed > $(date +%Y-%m-%d)_ambiente_apt_instalado.txt
-
-# Termina instalação do ipywidgets
-RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager
 
 # ==============================================================================
 # 6. EXPOSIÇÃO DE PORTAS E EXECUÇÃO
