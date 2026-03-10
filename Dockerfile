@@ -60,6 +60,9 @@ RUN uv pip install --extra-index-url https://pypi.anaconda.org/rapidsai-wheels-n
 RUN pip freeze > $(date +%Y-%m-%d)_requirements_instalado.txt
 RUN apt list --installed > $(date +%Y-%m-%d)_ambiente_apt_instalado.txt
 
+# Termina instalação do ipywidgets
+RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager
+
 # ==============================================================================
 # 6. EXPOSIÇÃO DE PORTAS E EXECUÇÃO
 # ==============================================================================

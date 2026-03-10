@@ -11,3 +11,4 @@ torch_geometric
 h5py
 neuraloperator
 horovod
+ipywidgets
