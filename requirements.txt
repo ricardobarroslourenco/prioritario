@@ -10,6 +10,6 @@ pandas
 torch_geometric
 h5py
 neuraloperator
-horovod
 ipywidgets
 tables
+horovod[all-frameworks]

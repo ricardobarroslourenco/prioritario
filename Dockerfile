@@ -30,6 +30,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     cmake \
     build-essential \
+    libnccl2 \
+    libnccl-dev \
     && rm -rf /var/lib/apt/lists/*  # Limpa o cache do apt para reduzir o tamanho da imagem
 
 # ==============================================================================
@@ -43,6 +45,14 @@ RUN pip install uv
 
 # Copia o arquivo de requisitos do host para dentro da imagem.
 COPY requirements.txt .
+
+# Seta variaveis de ambiente para instalação Horovod
+ENV HOROVOD_WITH_TENSORFLOW=1
+ENV HOROVOD_WITH_PYTORCH=1
+ENV HOROVOD_WITH_MXNET=1
+ENV HOROVOD_WITHOUT_MPI=1
+ENV HOROVOD_WITH_GLOO=1
+ENV HOROVOD_GPU_OPERATIONS=NCCL
 
 # Instala as dependências listadas no requirements.txt usando o 'uv'.
 # - '--system': Instala no ambiente Python do sistema (não cria venv), o que é comum em Docker.
