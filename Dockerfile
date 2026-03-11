@@ -30,8 +30,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     cmake \
     build-essential \
-    libnccl2 \
-    libnccl-dev \
     && rm -rf /var/lib/apt/lists/*  # Limpa o cache do apt para reduzir o tamanho da imagem
 
 # ==============================================================================
