@@ -44,29 +44,9 @@ RUN pip install uv
 # Copia o arquivo de requisitos do host para dentro da imagem.
 COPY requirements.txt .
 
-# Instala Frameworks (TensorFlow) ANTES de rodar o requirements.txt.
-# O Horovod precisa que eles já estejam instalados e "visíveis" no sistema para
-# conseguir compilar as extensões C++ corretamente durante o build.
-
-# Nota: PyTorch já existe na imagem base.
-# IMPORTANTE: Fixamos TensorFlow < 2.16 pois o Horovod 0.28.1 tem problemas de compilação
-# (headers C++ ausentes/incompatíveis) com TensorFlow 2.16+ e Keras 3.
-RUN uv pip install --system "tensorflow<2.16"
-
-# Seta variaveis de ambiente para instalação Horovod
-ENV HOROVOD_WITH_TENSORFLOW=1
-ENV HOROVOD_WITH_PYTORCH=1
-# Desabilita explicitamente o suporte a MXNet para evitar erros de compilação
-ENV HOROVOD_WITHOUT_MXNET=1
-ENV HOROVOD_WITHOUT_MPI=1
-ENV HOROVOD_WITH_GLOO=1
-ENV HOROVOD_GPU_OPERATIONS=NCCL
-
 # Instala as dependências listadas no requirements.txt usando o 'uv'.
 # - '--system': Instala no ambiente Python do sistema (não cria venv), o que é comum em Docker.
-# - '--no-build-isolation': OBRIGATÓRIO para o Horovod. Impede que o 'uv' crie um ambiente isolado para o build,
-#   permitindo que o script de instalação enxergue o TensorFlow já instalado no sistema.
-RUN uv pip install --system --no-build-isolation -r requirements.txt
+RUN uv pip install --system -r requirements.txt
 
 # Instala monitoracao de GPU (pacote NVIDIA)
 RUN uv pip install --system --extra-index-url https://pypi.anaconda.org/rapidsai-wheels-nightly/simple --pre jupyterlab_nvdashboard
