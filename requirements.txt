@@ -14,3 +14,4 @@ neuraloperator
 ipywidgets
 tables
 segyio
+einops
