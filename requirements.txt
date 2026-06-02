@@ -16,3 +16,4 @@ tables
 segyio
 einops
 lightning
+jupyterlab_nvdashboard
